@@ -1,26 +1,119 @@
-@import "tailwindcss";
-
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+/* globals.css */
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  padding: 0;
+  font-family: 'JetBrains Mono', monospace;
+  background: radial-gradient(ellipse at top, #1e1e2f 0%, #111118 100%);
+  color: #e3e3e3;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 60px;
+}
+
+.container {
+  width: 100%;
+  max-width: 800px;
+  padding: 0 20px;
+}
+
+.card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  border-radius: 16px;
+  padding: 40px;
+  box-shadow: 0 0 25px rgba(0, 255, 255, 0.1);
+  transition: 0.3s;
+}
+
+.card:hover {
+  box-shadow: 0 0 35px rgba(0, 255, 255, 0.3);
+}
+
+h1 {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+  color: #00f2ff;
+  text-shadow: 0 0 5px #00f2ff88;
+}
+
+.subtitle {
+  font-size: 1.2rem;
+  margin-bottom: 30px;
+  color: #aaa;
+}
+
+.chain-display {
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px dashed #00f2ff88;
+  padding: 15px;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  margin-bottom: 24px;
+  line-height: 1.5;
+  color: #d0ffff;
+  word-wrap: break-word;
+}
+
+.input-section {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  align-items: center;
+}
+
+input {
+  flex: 1;
+  padding: 12px 16px;
+  background-color: rgba(0, 0, 0, 0.4);
+  border: 2px solid #00f2ff44;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+input:focus {
+  border-color: #00f2ff;
+  box-shadow: 0 0 8px #00f2ff88;
+}
+
+button {
+  background-color: #00f2ff;
+  border: none;
+  color: #000;
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-size: 1rem;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background 0.3s;
+}
+
+button:hover {
+  background-color: #00cce6;
+}
+
+.message {
+  margin-top: 8px;
+  font-weight: bold;
+  font-size: 1.1rem;
+  color: #ffffff;
+  animation: pulse 0.4s ease-in-out;
+  text-shadow: 0 0 5px #00f2ff99;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.98);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
