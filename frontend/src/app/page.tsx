@@ -1,7 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import './globals.css';
+import ModeToggle from '../components/ModeToggle';
+import WordChain from '../components/WordChain';
+import WordInput from '../components/WordInput';
+import ConfirmModal from '../components/ConfirmModal';
+import { fetchStartWords, validateWord, fetchNextAIWord } from '../utils/api';
 
 export default function Home() {
   const [start, setStart] = useState('');
@@ -10,58 +14,52 @@ export default function Home() {
   const [input, setInput] = useState('');
   const [message, setMessage] = useState('');
   const [mode, setMode] = useState<'solo' | 'vs-ai'>('solo');
-  const [aiTurn, setAiTurn] = useState(false);
+  const [gameInProgress, setGameInProgress] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [pendingMode, setPendingMode] = useState<'solo' | 'vs-ai' | null>(null);
 
   useEffect(() => {
-    const fetchWords = async () => {
-      try {
-        const res = await fetch('http://localhost:8000/start-words');
-        const data = await res.json();
-        setStart(data.start_word);
-        setTarget(data.target_word);
-        setChain([data.start_word]);
-      } catch (err) {
-        setMessage('Failed to load start words.');
-      }
-    };
-    fetchWords();
+    startNewGame();
   }, []);
+
+  const startNewGame = async () => {
+    try {
+      const data = await fetchStartWords();
+      setStart(data.start_word);
+      setTarget(data.target_word);
+      setChain([data.start_word]);
+      setInput('');
+      setMessage('');
+      setGameInProgress(false);
+    } catch (err) {
+      setMessage('Failed to load start words.');
+    }
+  };
 
   const submitWord = async () => {
     const cleanedInput = input.trim().toLowerCase();
     const last = chain[chain.length - 1];
     if (!cleanedInput) return;
-  
+
     if (cleanedInput === target.toLowerCase()) {
       setChain([...chain, input]);
       setMessage('🎉 You reached the target word!');
       setInput('');
       return;
     }
-  
+
     try {
-      const res = await fetch('http://localhost:8000/validate-word', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ current_word: last, next_word: input }),
-      });
-      const data = await res.json();
-  
+      const data = await validateWord(last, input);
+
       if (data.valid) {
         const newChain = [...chain, input];
         setChain(newChain);
+        setGameInProgress(true);
         setInput('');
         setMessage('✓ Valid move');
-  
+
         if (mode === 'vs-ai') {
-          // AI Turn
-          const aiRes = await fetch('http://localhost:8000/ai-next-word', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ current_word: input, used_words: [...newChain] }),
-          });
-          const aiData = await aiRes.json();
-  
+          const aiData = await fetchNextAIWord(input, newChain);
           if (aiData.ai_word) {
             const aiWord = aiData.ai_word;
             if (aiWord.toLowerCase() === target.toLowerCase()) {
@@ -74,7 +72,6 @@ export default function Home() {
             setMessage('AI could not find a word.');
           }
         }
-  
       } else {
         setMessage(data.reason || '✗ Not semantically close enough.');
       }
@@ -83,44 +80,48 @@ export default function Home() {
     }
   };
 
+  const handleModeChange = (newMode: 'solo' | 'vs-ai') => {
+    if (newMode === mode) return;
+
+    if (gameInProgress) {
+      setPendingMode(newMode);
+      setShowModal(true);
+      return;
+    }
+
+    switchMode(newMode);
+  };
+
+  const switchMode = (newMode: 'solo' | 'vs-ai') => {
+    setMode(newMode);
+    startNewGame();
+  };
 
   return (
     <main className="container">
       <div className="card">
-
-        <div className="mode-toggle">
-          <label>
-            <input
-              type="radio"
-              checked={mode === 'solo'}
-              onChange={() => setMode('solo')}
-            />
-            Solo
-          </label>
-          <label>
-            <input
-              type="radio"
-              checked={mode === 'vs-ai'}
-              onChange={() => setMode('vs-ai')}
-            />
-            Vs AI
-          </label>
-        </div>
+        <ModeToggle mode={mode} onModeChange={handleModeChange} />
         <h1>Logical Link</h1>
         <p className="subtitle">
           Connect <strong>{start}</strong> → <strong>{target}</strong>
         </p>
-        <div className="chain-display">{chain.join(' → ')}</div>
-        <div className="input-section">
-          <input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Enter next word"
-          />
-          <button onClick={submitWord}>Submit</button>
-        </div>
+        <WordChain chain={chain} />
+        <WordInput input={input} setInput={setInput} onSubmit={submitWord} />
         {message && <p className="message">{message}</p>}
       </div>
+      <ConfirmModal
+        open={showModal}
+        message="Switching modes will restart the game. Continue?"
+        onConfirm={() => {
+          if (pendingMode) switchMode(pendingMode);
+          setShowModal(false);
+          setPendingMode(null);
+        }}
+        onCancel={() => {
+          setShowModal(false);
+          setPendingMode(null);
+        }}
+      />
     </main>
   );
 }

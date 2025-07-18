@@ -1,12 +1,6 @@
 import random
-from transformers import AutoModel, AutoTokenizer
+from app.config.settings import tokenizer, model, WORD_LIST
 import torch
-
-tokenizer = AutoTokenizer.from_pretrained("sentence-transformers/all-MiniLM-L6-v2")
-model = AutoModel.from_pretrained("sentence-transformers/all-MiniLM-L6-v2")
-
-# Basic list for now
-WORD_LIST = ["tree", "car", "dog", "ocean", "fire", "light", "space", "river"]
 
 def get_random_word_pair():
     return random.sample(WORD_LIST, 2)
@@ -31,7 +25,7 @@ def get_next_ai_word(current_word: str, used_words: list[str]) -> str | None:
         return None
 
     current_emb = embed(current_word)
-    
+
     best_word = None
     best_score = -1.0
 
