@@ -39,25 +39,31 @@ export default function Home() {
   const submitWord = async () => {
     const cleanedInput = input.trim().toLowerCase();
     const last = chain[chain.length - 1];
+  
     if (!cleanedInput) return;
-
+  
+    if (chain.map(w => w.toLowerCase()).includes(cleanedInput)) {
+      setMessage('✗ Word already used.');
+      return;
+    }
+  
     if (cleanedInput === target.toLowerCase()) {
       setChain([...chain, input]);
       setMessage('🎉 You reached the target word!');
       setInput('');
       return;
     }
-
+  
     try {
       const data = await validateWord(last, input);
-
+  
       if (data.valid) {
         const newChain = [...chain, input];
         setChain(newChain);
         setGameInProgress(true);
         setInput('');
         setMessage('✓ Valid move');
-
+  
         if (mode === 'vs-ai') {
           const aiData = await fetchNextAIWord(input, newChain);
           if (aiData.ai_word) {
