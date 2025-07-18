@@ -22,3 +22,24 @@ def compute_similarity(word1: str, word2: str) -> float:
     emb2 = embed(word2)
     cos_sim = torch.nn.functional.cosine_similarity(emb1, emb2)
     return cos_sim.item()
+
+def get_next_ai_word(current_word: str, used_words: list[str]) -> str | None:
+    used_words = [w.lower() for w in used_words]
+    candidates = [word for word in WORD_LIST if word.lower() not in used_words and word.lower() != current_word.lower()]
+
+    if not candidates:
+        return None
+
+    current_emb = embed(current_word)
+    
+    best_word = None
+    best_score = -1.0
+
+    for word in candidates:
+        candidate_emb = embed(word)
+        score = torch.nn.functional.cosine_similarity(current_emb, candidate_emb).item()
+        if score > best_score and score > 0.3:
+            best_score = score
+            best_word = word
+
+    return best_word

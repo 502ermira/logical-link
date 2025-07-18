@@ -9,6 +9,8 @@ export default function Home() {
   const [chain, setChain] = useState<string[]>([]);
   const [input, setInput] = useState('');
   const [message, setMessage] = useState('');
+  const [mode, setMode] = useState<'solo' | 'vs-ai'>('solo');
+  const [aiTurn, setAiTurn] = useState(false);
 
   useEffect(() => {
     const fetchWords = async () => {
@@ -28,16 +30,15 @@ export default function Home() {
   const submitWord = async () => {
     const cleanedInput = input.trim().toLowerCase();
     const last = chain[chain.length - 1];
-
     if (!cleanedInput) return;
-
+  
     if (cleanedInput === target.toLowerCase()) {
       setChain([...chain, input]);
       setMessage('🎉 You reached the target word!');
       setInput('');
       return;
     }
-
+  
     try {
       const res = await fetch('http://localhost:8000/validate-word', {
         method: 'POST',
@@ -45,11 +46,35 @@ export default function Home() {
         body: JSON.stringify({ current_word: last, next_word: input }),
       });
       const data = await res.json();
-
+  
       if (data.valid) {
-        setChain([...chain, input]);
+        const newChain = [...chain, input];
+        setChain(newChain);
         setInput('');
         setMessage('✓ Valid move');
+  
+        if (mode === 'vs-ai') {
+          // AI Turn
+          const aiRes = await fetch('http://localhost:8000/ai-next-word', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ current_word: input, used_words: [...newChain] }),
+          });
+          const aiData = await aiRes.json();
+  
+          if (aiData.ai_word) {
+            const aiWord = aiData.ai_word;
+            if (aiWord.toLowerCase() === target.toLowerCase()) {
+              setChain([...newChain, aiWord]);
+              setMessage('😓 AI reached the target word!');
+            } else {
+              setChain([...newChain, aiWord]);
+            }
+          } else {
+            setMessage('AI could not find a word.');
+          }
+        }
+  
       } else {
         setMessage(data.reason || '✗ Not semantically close enough.');
       }
@@ -58,9 +83,29 @@ export default function Home() {
     }
   };
 
+
   return (
     <main className="container">
       <div className="card">
+
+        <div className="mode-toggle">
+          <label>
+            <input
+              type="radio"
+              checked={mode === 'solo'}
+              onChange={() => setMode('solo')}
+            />
+            Solo
+          </label>
+          <label>
+            <input
+              type="radio"
+              checked={mode === 'vs-ai'}
+              onChange={() => setMode('vs-ai')}
+            />
+            Vs AI
+          </label>
+        </div>
         <h1>Logical Link</h1>
         <p className="subtitle">
           Connect <strong>{start}</strong> → <strong>{target}</strong>
