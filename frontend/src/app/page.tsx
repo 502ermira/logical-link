@@ -7,7 +7,7 @@ import WordInput from '../components/WordInput';
 import ConfirmModal from '../components/ConfirmModal';
 import { fetchStartWords, validateWord, fetchNextAIWord } from '../utils/api';
 
-const PLAYER_COLORS = ['text-red-500', 'text-blue-500', 'text-green-500', 'text-purple-500'];
+const PLAYER_COLORS = ['red', 'blue', 'green', 'purple'];
 
 export default function Home() {
   const [start, setStart] = useState('');
@@ -23,6 +23,7 @@ export default function Home() {
   const [players, setPlayers] = useState<string[]>([]);
   const [currentPlayer, setCurrentPlayer] = useState<number>(0);
   const [showPlayerSetup, setShowPlayerSetup] = useState(false);
+  const [playerCount, setPlayerCount] = useState<number | null>(null);
 
   useEffect(() => {
     if (mode === 'multiplayer') {
@@ -126,34 +127,41 @@ export default function Home() {
 
   const handlePlayerSetup = (names: string[]) => {
     setShowPlayerSetup(false);
+    setPlayerCount(null);
     startNewGame(names);
   };
 
   return (
-    <main className="container p-4">
-      <div className="card border p-4 max-w-xl mx-auto shadow-md bg-white dark:bg-gray-900">
+    <main className="container">
+      <div className="card">
         <ModeToggle mode={mode} onModeChange={handleModeChange} />
-        <h1 className="text-2xl font-bold mb-2">Logical Link</h1>
-        <p className="subtitle mb-4">
+        <h1>Logical Link</h1>
+        <p className="subtitle">
           Connect <strong>{start}</strong> → <strong>{target}</strong>
         </p>
+
         <WordChain chain={chain} playerColors={PLAYER_COLORS} players={players} />
+
         {mode === 'multiplayer' && players.length > 0 && (
-          <p className="mb-2 font-semibold">
-            Current: <span className={PLAYER_COLORS[currentPlayer]}>{players[currentPlayer]}</span>
+          <p className="subtitle">
+            Current: <span className={`text-${PLAYER_COLORS[currentPlayer]}-500`}>{players[currentPlayer]}</span>
           </p>
         )}
+
         <WordInput
           input={input}
           setInput={setInput}
           onSubmit={submitWord}
           disabled={mode === 'multiplayer' && players.length > 0 && chain.length > 1 && message.includes('wins')}
         />
-        {message && <p className="mt-2 text-sm">{message}</p>}
+
+        {message && <p className="message">{message}</p>}
       </div>
 
       {showPlayerSetup && (
-        <PlayerSetupModal onStart={handlePlayerSetup} onCancel={() => setMode('solo')} />
+        playerCount === null
+          ? <PlayerCountSelect onSelect={setPlayerCount} onCancel={() => setMode('solo')} />
+          : <PlayerNameInput count={playerCount} onStart={handlePlayerSetup} onCancel={() => setMode('solo')} />
       )}
 
       <ConfirmModal
@@ -173,36 +181,61 @@ export default function Home() {
   );
 }
 
-function PlayerSetupModal({ onStart, onCancel }: { onStart: (names: string[]) => void, onCancel: () => void }) {
-  const [names, setNames] = useState(['', '', '', '']);
+function PlayerCountSelect({ onSelect, onCancel }: { onSelect: (n: number) => void, onCancel: () => void }) {
+  return (
+    <div className="modal-backdrop">
+      <div className="modal">
+        <h2>Choose number of players</h2>
+        <div className="modal-buttons">
+          {[2, 3, 4].map(n => (
+            <button key={n} onClick={() => onSelect(n)}>{n}</button>
+          ))}
+        </div>
+        <div className="modal-buttons">
+          <button onClick={onCancel}>Cancel</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PlayerNameInput({
+  count,
+  onStart,
+  onCancel,
+}: {
+  count: number;
+  onStart: (names: string[]) => void;
+  onCancel: () => void;
+}) {
+  const [names, setNames] = useState(Array(count).fill(''));
 
   const handleSubmit = () => {
-    const filtered = names.map(n => n.trim()).filter(n => n);
-    if (filtered.length >= 2) {
-      onStart(filtered);
+    const validNames = names.map(n => n.trim()).filter(Boolean);
+    if (validNames.length === count) {
+      onStart(validNames);
     }
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-      <div className="bg-white dark:bg-gray-800 p-4 rounded shadow-md max-w-sm w-full">
-        <h2 className="text-lg font-semibold mb-2">Enter Player Names (2–4)</h2>
+    <div className="modal-backdrop">
+      <div className="modal">
+        <h2>Enter Player Names</h2>
         {names.map((name, i) => (
           <input
             key={i}
-            className="block w-full mb-2 p-2 border"
             placeholder={`Player ${i + 1}`}
             value={name}
             onChange={(e) => {
-              const newNames = [...names];
-              newNames[i] = e.target.value;
-              setNames(newNames);
+              const copy = [...names];
+              copy[i] = e.target.value;
+              setNames(copy);
             }}
           />
         ))}
-        <div className="flex justify-end gap-2">
-          <button className="px-3 py-1 bg-gray-300 rounded" onClick={onCancel}>Cancel</button>
-          <button className="px-3 py-1 bg-blue-500 text-white rounded" onClick={handleSubmit}>Start</button>
+        <div className="modal-buttons">
+          <button onClick={onCancel}>Cancel</button>
+          <button onClick={handleSubmit}>Start</button>
         </div>
       </div>
     </div>

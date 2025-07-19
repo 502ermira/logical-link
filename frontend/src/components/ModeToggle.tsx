@@ -8,27 +8,30 @@ type Props = {
 
 export default function ModeToggle({ mode, onModeChange }: Props) {
   return (
-    <div className="flex gap-4 mb-4">
-      <label>
+    <div className="mode-toggle">
+      <label className="mode-option">
         <input
           type="radio"
           checked={mode === 'solo'}
           onChange={() => onModeChange('solo')}
-        /> Solo
+        />
+        Solo
       </label>
-      <label>
+      <label className="mode-option">
         <input
           type="radio"
           checked={mode === 'vs-ai'}
           onChange={() => onModeChange('vs-ai')}
-        /> Vs AI
+        />
+        Vs AI
       </label>
-      <label>
+      <label className="mode-option">
         <input
           type="radio"
           checked={mode === 'multiplayer'}
           onChange={() => onModeChange('multiplayer')}
-        /> Multiplayer
+        />
+        Multiplayer
       </label>
     </div>
   );

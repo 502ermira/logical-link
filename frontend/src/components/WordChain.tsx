@@ -2,20 +2,27 @@
 import React from 'react';
 
 type Props = {
-  chain: { word: string, playerIndex: number | null }[];
+  chain: { word: string; playerIndex: number | null }[];
   playerColors: string[];
   players: string[];
 };
 
 export default function WordChain({ chain, playerColors, players }: Props) {
   return (
-    <div className="mb-4">
+    <div className="chain-display">
       {chain.map((entry, idx) => {
-        const color = entry.playerIndex !== null ? playerColors[entry.playerIndex % playerColors.length] : '';
-        const label = entry.playerIndex !== null ? ` (${players[entry.playerIndex]})` : '';
+        const playerColorClass =
+          entry.playerIndex !== null
+            ? `player-color-${entry.playerIndex % playerColors.length}`
+            : '';
+
+        const label =
+          entry.playerIndex !== null ? ` (${players[entry.playerIndex]})` : '';
+
         return (
-          <div key={idx} className={`py-1 ${color}`}>
-            {entry.word}{label}
+          <div key={idx} className={`chain-word ${playerColorClass}`}>
+            {entry.word}
+            {label}
           </div>
         );
       })}

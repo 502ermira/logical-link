@@ -10,19 +10,15 @@ type Props = {
 
 export default function WordInput({ input, setInput, onSubmit, disabled = false }: Props) {
   return (
-    <div className="flex gap-2 mb-4">
+    <div className="input-section">
       <input
-        className="flex-1 p-2 border rounded"
+        type="text"
         value={input}
         onChange={(e) => setInput(e.target.value)}
         placeholder="Enter next word"
         disabled={disabled}
       />
-      <button
-        className="px-4 bg-blue-500 text-white rounded"
-        onClick={onSubmit}
-        disabled={disabled}
-      >
+      <button onClick={onSubmit} disabled={disabled}>
         Submit
       </button>
     </div>
