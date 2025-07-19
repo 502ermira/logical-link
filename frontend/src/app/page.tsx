@@ -160,8 +160,24 @@ export default function Home() {
 
       {showPlayerSetup && (
         playerCount === null
-          ? <PlayerCountSelect onSelect={setPlayerCount} onCancel={() => setMode('solo')} />
-          : <PlayerNameInput count={playerCount} onStart={handlePlayerSetup} onCancel={() => setMode('solo')} />
+          ? <PlayerCountSelect 
+              onSelect={setPlayerCount} 
+              onCancel={() => {
+                setMode('solo');
+                setShowPlayerSetup(false);
+                startNewGame();
+              }} 
+            />
+          : <PlayerNameInput 
+              count={playerCount} 
+              onStart={handlePlayerSetup} 
+              onCancel={() => {
+                setMode('solo');
+                setShowPlayerSetup(false);
+                setPlayerCount(null);
+                startNewGame();
+              }} 
+            />
       )}
 
       <ConfirmModal
